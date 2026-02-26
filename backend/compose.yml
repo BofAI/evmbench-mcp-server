@@ -123,6 +123,7 @@ services:
     environment:
       BACKEND_WEB_HOST: 0.0.0.0
       BACKEND_WEB_PORT: 1337
+      BACKEND_JWT_SECRET: ${BACKEND_JWT_SECRET:?set BACKEND_JWT_SECRET}
       DATABASE_DSN: postgresql+asyncpg://${POSTGRES_USER:-evmbench}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-evmbench}
       BACKEND_SECRETS_BACKEND: http
       BACKEND_SECRETS_BACKEND_ARGUMENTS: >

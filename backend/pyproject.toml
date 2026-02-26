@@ -23,6 +23,7 @@ dependencies = [
     "kubernetes>=35.0.0",
     "pyjwt>=2.10.1",
     "pycryptodome>=3.20.0",
+    "mcp[cli]>=1.12.0",
 ]
 
 [dependency-groups]

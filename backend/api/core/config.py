@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     )
 
     BACKEND_DEV: bool = False
+    BACKEND_MCP_ENABLED: bool = True
+    BACKEND_MCP_API_KEY: Secret[str] | None = None
+    BACKEND_MCP_SERVICE_USER_ID: str = 'mcp'
 
     BACKEND_WEB_HOST: str = '127.0.0.1'
     BACKEND_WEB_PORT: int = 1337
