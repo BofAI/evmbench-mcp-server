@@ -21,6 +21,10 @@ from api.mcp.tools import (
 if TYPE_CHECKING:
     from fastapi import FastAPI
 
+# streamable_http_path='/' so that when client requests .../mcp/, child gets path "/" and Route("/") matches.
+# Keep SSE (default): do not set json_response=True so standard MCP clients (Claude Desktop, Cursor) work.
+# If session.initialize() hangs, the server may not be closing the SSE stream after the response; consider
+# json_response=True only for serverless/short requests or until the SDK fixes SSE stream closure.
 mcp_server = FastMCP(
     'evmbench',
     instructions=(
@@ -28,6 +32,7 @@ mcp_server = FastMCP(
         'Upload a Solidity project (zip) to start an audit, '
         'then poll job status until the vulnerability report is ready.'
     ),
+    streamable_http_path='/',
 )
 
 _fastapi_app: FastAPI | None = None

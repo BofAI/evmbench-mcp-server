@@ -99,7 +99,7 @@ services:
       # Upstream API base URL (default https://api.openai.com)
       OAI_PROXY_OPENAI_BASE_URL: ${OAI_PROXY_OPENAI_BASE_URL:-https://api.openai.com}
     ports:
-      - "127.0.0.1:8084:8084"
+      - "8084:8084"
     networks:
       shared_network:
         aliases:
@@ -130,7 +130,7 @@ services:
         {"url":"http://secretsvc:8081","token":"${SECRETS_TOKEN_WO:?set SECRETS_TOKEN_WO}"}
       RABBITMQ_DSN: amqp://${RABBITMQ_USER:-evmbench}:${RABBITMQ_PASSWORD}@rabbitmq:5672/
     ports:
-      - "127.0.0.1:${BACKEND_WEB_PORT:-1337}:1337"
+      - "${BACKEND_WEB_PORT:-1337}:1337"
     depends_on:
       postgres:
         condition: service_healthy
