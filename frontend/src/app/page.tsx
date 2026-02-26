@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { useCallback, useMemo, useState } from "react"
 import { AppFooter } from "@/components/app-footer"
 import { AppHeader } from "@/components/app-header"
+import { DailyLimitIndicator } from "@/components/daily-limit-indicator"
 import { FileUploader } from "@/components/file-uploader"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useAuth } from "@/hooks/use-auth"
+import { useDailyLimit } from "@/hooks/use-daily-limit"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import { useSessionStorage } from "@/hooks/use-session-storage"
 import { API_BASE } from "@/lib/api"
@@ -47,6 +49,9 @@ export default function Page() {
     isConfigLoading,
     keyPredefined,
   } = useAuth()
+
+  const { data: dailyLimit, isLoading: isDailyLimitLoading, error: dailyLimitError } =
+    useDailyLimit()
 
   const fileCount = files?.length ?? 0
   const selectedLabel = useMemo(() => {
@@ -104,7 +109,19 @@ export default function Page() {
 
   return (
     <main className="flex min-h-screen w-screen flex-col">
-      <AppHeader showLogo={false} showBorder={false} />
+      <AppHeader
+        showLogo={false}
+        showBorder={false}
+        right={
+          <DailyLimitIndicator
+            capacity={dailyLimit?.capacity ?? 0}
+            used={dailyLimit?.used ?? 0}
+            remaining={dailyLimit?.remaining ?? 0}
+            isLoading={isDailyLimitLoading}
+            error={dailyLimitError}
+          />
+        }
+      />
       <section className="flex flex-1 items-center justify-center px-6 py-12">
         <div className="w-full max-w-4xl">
           <div className="mx-auto grid max-w-sm gap-10 lg:max-w-none lg:grid-cols-5">

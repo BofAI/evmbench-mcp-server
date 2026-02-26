@@ -15,6 +15,27 @@ docker build -t evmbench/worker:latest -f docker/worker/Dockerfile .
 docker build -t evmbench/backend:latest -f docker/backend/Dockerfile .
 ```
 
+## Daily worker limit
+
+Instancer enforces a **global per-day limit** on how many workers can be started.
+
+- Configure via `INSTANCER_DAILY_WORKER_LIMIT` (integer, default `100` when unset).
+- The limit is evaluated in UTC days (00:00–24:00 UTC).
+- When the limit is reached:
+  - New jobs are marked as `failed` without starting a worker.
+  - Instancer logs a warning including the `job_id` and date.
+- Usage is tracked in the `instancer_daily_usage` table (date, capacity, used_count).
+
+The backend exposes a helper endpoint for UIs and MCP tools:
+
+- `GET /v1/jobs/daily-limit`
+  - Returns:
+    - `date_utc`: current UTC date.
+    - `capacity`: configured daily capacity for that date.
+    - `used`: number of successfully started workers.
+    - `remaining`: `max(capacity - used, 0)`.
+    - `reset_at`: ISO8601 timestamp when the quota resets (next UTC midnight).
+
 ## Local run (recommended)
 
 ```bash

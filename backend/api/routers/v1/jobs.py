@@ -1,6 +1,7 @@
 import os
 import uuid
 from contextlib import suppress
+from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
 from typing import Annotated
 
@@ -14,7 +15,7 @@ from api.core.const import ALLOWED_MODELS
 from api.core.deps import OptionalTokenDep, TokenDep, get_db
 from api.core.impl import auth_backend
 from api.core.rabbitmq import RabbitMQPublisher, get_rabbitmq_publisher
-from api.models.job import Job, JobStatus
+from api.models.job import InstancerDailyUsage, Job, JobStatus
 from api.schemas.job import JobHistoryItem, JobStatusResponse, PatchJobForm, StartJobForm, StartJobResponse
 from api.secrets.impl import secret_storage
 from api.util.aes_gcm import derive_key, encrypt_token
@@ -200,6 +201,35 @@ async def get_job_history(
     stmt = select(Job).where(Job.user_id == token.user_id).order_by(Job.created_at.desc(), Job.id.desc())
     jobs = await session.scalars(stmt)
     return [JobHistoryItem.model_validate(job) for job in jobs.all()]
+
+
+@router.get('/daily-limit')
+async def get_daily_limit(
+    session: DbSessionDep,
+) -> dict:
+    """Return today's instancer worker daily limit and usage (UTC-based)."""
+    today = datetime.now(UTC).date()
+
+    stmt = select(InstancerDailyUsage).where(InstancerDailyUsage.date_utc == today)
+    usage = await session.scalar(stmt)
+
+    if usage is None:
+        capacity = settings.INSTANCER_DAILY_WORKER_LIMIT
+        used = 0
+    else:
+        capacity = usage.capacity
+        used = usage.used_count
+
+    remaining = max(capacity - used, 0)
+    reset_at = datetime.combine(today + timedelta(days=1), datetime.min.time(), tzinfo=UTC)
+
+    return {
+        'date_utc': today.isoformat(),
+        'capacity': capacity,
+        'used': used,
+        'remaining': remaining,
+        'reset_at': reset_at.isoformat(),
+    }
 
 
 @router.get('/{job_id}')

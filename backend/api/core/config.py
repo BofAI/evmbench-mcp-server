@@ -62,6 +62,7 @@ class Settings(BaseSettings):
     RABBITMQ_QUEUE_SUFFIX: str | None = None
     RABBITMQ_QUEUE_TTL_SECONDS: int = 60
     RABBITMQ_QUEUE_DLQ: str | None = None
+    INSTANCER_DAILY_WORKER_LIMIT: int = 100
     INSTANCER_MAX_CONCURRENT_JOBS: int | None = Field(
         default=None,
         validation_alias=AliasChoices('INSTANCER_MAX_CONCURRENT_JOBS', 'MAX_CONCURRENT_JOBS'),

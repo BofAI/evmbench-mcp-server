@@ -8,8 +8,10 @@ from loguru import logger
 
 from instancer.backends.abc import StartWorkerOptions
 from instancer.core.config import settings
+from instancer.core.database import db
 from instancer.core.impl import workers_backend
 from instancer.core.job_status import run_job_status_update
+from instancer.core.quota import DailyQuotaExceededError, check_and_increment_daily_quota
 
 
 def _job_dlq_name() -> str:
@@ -113,6 +115,14 @@ async def handle_job_start_message(message: AbstractIncomingMessage) -> None:
         limit = _effective_max_concurrent_jobs()
         if limit is not None:
             await _wait_for_capacity(limit)
+
+        async with db.acquire() as session:
+            await check_and_increment_daily_quota(
+                session,
+                job_id=job_id,
+                default_capacity=settings.INSTANCER_DAILY_WORKER_LIMIT,
+            )
+
         start_result = await workers_backend.start_worker(
             StartWorkerOptions(
                 job_id=job_id,
@@ -127,6 +137,11 @@ async def handle_job_start_message(message: AbstractIncomingMessage) -> None:
             return
 
         await run_job_status_update({'job_id': job_id, 'status': 'running'})
+    except DailyQuotaExceededError as err:
+        logger.warning(f'Daily quota exceeded for job_id={job_id}: {err}')
+        await run_job_status_update({'job_id': job_id, 'status': 'failed'})
+        await message.ack()
+        return
     except Exception as err:  # noqa: BLE001
         logger.opt(exception=err).warning(f'Unable to start worker for job_id={job_id}')
         await message.nack(requeue=True)

@@ -4,16 +4,8 @@ from uuid import UUID
 from loguru import logger
 from sqlalchemy import update
 
-from api.core.database import DatabaseManager
 from api.models.job import Job, JobStatus
-from instancer.core.config import settings
-
-
-_db = DatabaseManager(
-    database_url=str(settings.DATABASE_DSN.get_secret_value()),
-    pool_size=settings.INSTANCER_DATABASE_POOL_SIZE,
-    max_overflow=settings.INSTANCER_DATABASE_MAX_OVERFLOW,
-)
+from instancer.core.database import db
 
 
 def _now() -> datetime.datetime:
@@ -44,7 +36,7 @@ async def _apply_status(job_id: UUID, status: str) -> None:
         logger.warning(f'Unknown status={status} for job_id={job_id}')
         return
 
-    async with _db.acquire() as session:
+    async with db.acquire() as session:
         await session.execute(stmt)
 
 

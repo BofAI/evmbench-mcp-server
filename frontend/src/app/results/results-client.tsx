@@ -30,6 +30,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
 import { useAuth } from "@/hooks/use-auth"
+import { useDailyLimit } from "@/hooks/use-daily-limit"
 import { useFileExplorer } from "@/hooks/use-file-explorer"
 import { useJob } from "@/hooks/use-job"
 import { useMediaQuery } from "@/hooks/use-media-query"
@@ -88,6 +89,7 @@ export default function ResultsClient() {
     shouldShowRunStatus,
     setJob,
   } = useJob(jobId)
+  const { refetch: refetchDailyLimit } = useDailyLimit()
 
   useEffect(() => {
     if (!jobId || !job) return
@@ -98,6 +100,16 @@ export default function ResultsClient() {
       created_at_ms: Date.now(),
     })
   }, [jobId, job])
+
+  const prevJobStatusRef = useRef<string | undefined>(undefined)
+  useEffect(() => {
+    const status = job?.status
+    if (status !== "running" && status !== "succeeded" && status !== "failed")
+      return
+    if (prevJobStatusRef.current === status) return
+    prevJobStatusRef.current = status
+    void refetchDailyLimit()
+  }, [job?.status, refetchDailyLimit])
 
   const setUrlFile = useCallback(
     (file: string | null) => {
