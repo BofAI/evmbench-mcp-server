@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 from collections.abc import Awaitable, Callable
 
 import aio_pika
@@ -11,7 +12,7 @@ from instancer.core.config import settings
 from instancer.core.database import db
 from instancer.core.impl import workers_backend
 from instancer.core.job_status import run_job_status_update
-from instancer.core.quota import DailyQuotaExceededError, check_and_increment_daily_quota
+from instancer.core.quota import DailyQuotaExceededError, _ensure_row_for_today, check_and_increment_daily_quota
 
 
 def _job_dlq_name() -> str:
@@ -189,7 +190,18 @@ async def _consume_queue(
 async def consume() -> None:
     logger.info('Connecting...')
     connection = await aio_pika.connect_robust(settings.RABBITMQ_DSN.get_secret_value())
-    logger.info('Connected! Waiting for messages')
+    logger.info('Connected!')
+
+    today = datetime.datetime.now(datetime.UTC).date()
+    async with db.acquire() as session:
+        await _ensure_row_for_today(
+            session,
+            today=today,
+            capacity=settings.INSTANCER_DAILY_WORKER_LIMIT,
+        )
+    logger.info('Daily quota row ensured for today=%s', today)
+
+    logger.info('Waiting for messages')
     async with connection:
         channel = await connection.channel()
         await channel.set_qos(prefetch_count=1)

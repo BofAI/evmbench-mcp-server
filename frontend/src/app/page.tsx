@@ -83,6 +83,12 @@ export default function Page() {
       setSubmitError("Authorize with GitHub to start analysis.")
       return
     }
+    if (dailyLimit != null && dailyLimit.remaining <= 0) {
+      setSubmitError(
+        "Daily analysis limit reached. Please try again tomorrow.",
+      )
+      return
+    }
     const trimmedKey = openaiKey.trim()
 
     setIsSubmitting(true)
