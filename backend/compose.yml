@@ -168,6 +168,7 @@ services:
       INSTANCER_RESULTSVC_PORT: 8083
       # Optional: only required for proxy-token mode
       INSTANCER_OAI_PROXY_BASE_URL: ${OAI_PROXY_BASE_URL:-}
+      INSTANCER_WORKER_IMAGE: ${INSTANCER_WORKER_IMAGE:-evmbench/worker:latest}
     depends_on:
       rabbitmq:
         condition: service_healthy
