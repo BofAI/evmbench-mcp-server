@@ -249,7 +249,12 @@ async def tool_get_job_history() -> list[dict]:
     token = _mcp_token()
 
     async with _db.acquire() as session:
-        stmt = select(Job).where(Job.user_id == token.user_id).order_by(Job.created_at.desc(), Job.id.desc())
+        stmt = (
+            select(Job)
+            .where(Job.user_id == token.user_id)
+            .order_by(Job.created_at.desc(), Job.id.desc())
+            .limit(100)
+        )
         jobs = await session.scalars(stmt)
         return [
             {

@@ -5,6 +5,7 @@ Exposes audit capabilities as MCP tools via Streamable HTTP at /mcp.
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
 from mcp.server.fastmcp import FastMCP
@@ -62,13 +63,17 @@ async def mcp_start_job(
     model: str,
     openai_key: str | None = None,
 ) -> dict:
-    return await tool_start_job(
-        file_base64=file_base64,
-        file_name=file_name,
-        model=model,
-        openai_key=openai_key,
-        app_state=_fastapi_app.state if _fastapi_app else None,
-    )
+    try:
+        return await tool_start_job(
+            file_base64=file_base64,
+            file_name=file_name,
+            model=model,
+            openai_key=openai_key,
+            app_state=_fastapi_app.state if _fastapi_app else None,
+        )
+    except Exception as err:
+        logging.getLogger(__name__).exception('MCP tool start_job failed: %s', err)
+        raise
 
 
 @mcp_server.tool(

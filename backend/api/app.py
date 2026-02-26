@@ -13,17 +13,16 @@ from .routers.v1 import router as v1_router
 
 @asynccontextmanager
 async def lifespan(fastapi_app: FastAPI) -> AsyncIterator[None]:
-    # publisher = RabbitMQPublisher(
-    #     dsn=settings.RABBITMQ_DSN.get_secret_value(),
-    #     queue=settings.rabbitmq_queue_name,
-    # )
-    # await publisher.connect()
-    # fastapi_app.state.rabbitmq = publisher
+    publisher = RabbitMQPublisher(
+        dsn=settings.RABBITMQ_DSN.get_secret_value(),
+        queue=settings.rabbitmq_queue_name,
+    )
+    await publisher.connect()
+    fastapi_app.state.rabbitmq = publisher
     try:
         yield
     finally:
-        # await publisher.close()
-        pass
+        await publisher.close()
 
 
 _lifespan = lifespan
@@ -43,7 +42,7 @@ if settings.BACKEND_MCP_ENABLED:
 
 
 app = FastAPI(
-    docs_url='/' if settings.BACKEND_DEV else None,
+    docs_url='/docs' if settings.BACKEND_DEV else None,
     openapi_url='/openapi.json' if settings.BACKEND_DEV else None,
     redoc_url=None,
     version='0.0.1',
@@ -62,6 +61,14 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+
+
+@app.get('/')
+async def root() -> dict[str, str]:
+    """Root endpoint for ALB health checks; returns 200."""
+    return {'status': 'ok'}
+
+
 app.include_router(v1_router)
 
 if settings.BACKEND_MCP_ENABLED:
