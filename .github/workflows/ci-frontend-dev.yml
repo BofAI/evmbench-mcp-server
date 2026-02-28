@@ -33,7 +33,7 @@ jobs:
           file: ./frontend/Dockerfile
           push: true
           build-args: |
-            NEXT_PUBLIC_API_BASE=https://api.evmbench.com
+            NEXT_PUBLIC_API_BASE=https://tm-tvmbench.endjgfsv.link
           tags: |
             ${{ steps.meta.outputs.frontend_image }}:${{ steps.meta.outputs.tag }}
             ${{ steps.meta.outputs.frontend_image }}:latest
