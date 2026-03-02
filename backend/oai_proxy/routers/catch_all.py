@@ -12,6 +12,9 @@ from oai_proxy.core.config import settings
 
 # Upstream base URL: set OAI_PROXY_OPENAI_BASE_URL env (default https://api.openai.com)
 OPENAI_BASE_URL = (settings.OAI_PROXY_OPENAI_BASE_URL or '').rstrip('/') or 'https://api.openai.com'
+# When set, static (Bearer STATIC) requests use this base instead (e.g. Azure)
+STATIC_BASE_URL = (settings.OAI_PROXY_STATIC_BASE_URL or '').strip() or None
+STATIC_API_VERSION = (settings.OAI_PROXY_STATIC_API_VERSION or '').strip() or None
 # Marker token that triggers use of the static key
 STATIC_KEY_MARKER = 'STATIC'
 HOP_BY_HOP_HEADERS = {
@@ -87,30 +90,41 @@ def _filter_headers(items: Iterable[tuple[str, str]]) -> dict[str, str]:
     return headers
 
 
+def _upstream_base_and_params(token: str) -> tuple[str, dict[str, str]]:
+    """Return (base_url, extra_query_params) for the upstream request."""
+    if token == STATIC_KEY_MARKER and STATIC_BASE_URL:
+        base = STATIC_BASE_URL.rstrip('/')
+        extra = {}
+        if STATIC_API_VERSION:
+            extra['api-version'] = STATIC_API_VERSION
+        return base, extra
+    return OPENAI_BASE_URL, {}
+
+
 async def _proxy_request(request: Request, path: str) -> StreamingResponse:
     token = _get_authorization_token(request)
     openai_key = _resolve_openai_key(token)
     forward_headers = _filter_headers(request.headers.items())
     forward_headers['authorization'] = f'Bearer {openai_key}'
 
+    base_url, extra_params = _upstream_base_and_params(token)
     target_path = path.lstrip('/')
     encoded_path = quote(target_path, safe='/')
-    target_url = f'{OPENAI_BASE_URL}/{encoded_path}' if encoded_path else OPENAI_BASE_URL
+    target_url = f'{base_url}/{encoded_path}' if encoded_path else base_url
 
     body = request.stream()
-    params = request.query_params
+    params = dict(request.query_params)
+    params.update(extra_params)
 
     client = httpx.AsyncClient(timeout=httpx.Timeout(60.0, read=None))
-    upstream = await client.send(
-        client.build_request(
-            request.method,
-            target_url,
-            params=params,
-            headers=forward_headers,
-            content=body,
-        ),
-        stream=True,
+    req = client.build_request(
+        request.method,
+        target_url,
+        params=params,
+        headers=forward_headers,
+        content=body,
     )
+    upstream = await client.send(req, stream=True)
 
     response_headers = _filter_headers(upstream.headers.items())
 

@@ -45,6 +45,13 @@ class Settings(BaseSettings):
     )
     INSTANCER_CAPACITY_POLL_SECONDS: int = 15
 
+    # Azure OpenAI (optional): when set, passed to worker so run_codex_detect.sh uses Azure.
+    # Azure typically exposes one deployment; its name is set here and used as CODEX_MODEL.
+    AZURE_OPENAI_BASE_URL: str | None = Field(default=None, description='e.g. https://YOUR_RESOURCE.openai.azure.com/openai')
+    AZURE_OPENAI_API_VERSION: str | None = Field(default=None, description='e.g. 2025-04-01-preview')
+    AZURE_OPENAI_API_KEY: Secret[str] | None = Field(default=None, description='Azure resource key when using Azure for workers')
+    AZURE_OPENAI_DEPLOYMENT: str | None = Field(default=None, description='Azure deployment name (used as CODEX_MODEL when using Azure)')
+
     @field_validator('RABBITMQ_QUEUE_SUFFIX', mode='before')
     @classmethod
     def _normalize_queue_suffix(cls, value: str | None) -> str | None:

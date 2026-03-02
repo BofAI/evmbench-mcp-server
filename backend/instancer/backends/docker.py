@@ -10,6 +10,19 @@ from instancer.backends.abc import BackendABC, StartWorkerOptions, StartWorkerRe
 from instancer.core.config import settings
 
 
+def _worker_env_azure() -> dict[str, str]:
+    """Env vars for Azure OpenAI; empty if not configured."""
+    out: dict[str, str] = {}
+    if settings.AZURE_OPENAI_BASE_URL and settings.AZURE_OPENAI_API_KEY is not None:
+        out['AZURE_OPENAI_BASE_URL'] = settings.AZURE_OPENAI_BASE_URL.strip()
+        out['AZURE_OPENAI_API_KEY'] = settings.AZURE_OPENAI_API_KEY.get_secret_value()
+        if settings.AZURE_OPENAI_API_VERSION:
+            out['AZURE_OPENAI_API_VERSION'] = settings.AZURE_OPENAI_API_VERSION.strip()
+        if settings.AZURE_OPENAI_DEPLOYMENT:
+            out['AZURE_OPENAI_DEPLOYMENT'] = settings.AZURE_OPENAI_DEPLOYMENT.strip()
+    return out
+
+
 # NOTE: workaround for not having an async context during import-time
 @cache
 def get_docker() -> Docker:
@@ -48,6 +61,8 @@ class DockerBackend(BackendABC):
         }
         if settings.INSTANCER_OAI_PROXY_BASE_URL:
             env['OAI_PROXY_BASE_URL'] = settings.INSTANCER_OAI_PROXY_BASE_URL
+
+        env.update(_worker_env_azure())
 
         container = await docker.containers.create(
             config={

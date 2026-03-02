@@ -182,8 +182,11 @@ def _run_codex_detect(*, openai_token: str, key_mode: str) -> Path:
         raise RuntimeError(msg)
 
     model_map = _load_model_map()
-    model = _resolve_codex_model(model_key=MODEL_KEY, model_map=model_map)
-    env['CODEX_MODEL'] = model
+    if env.get('AZURE_OPENAI_DEPLOYMENT'):
+        env['CODEX_MODEL'] = env['AZURE_OPENAI_DEPLOYMENT']
+    else:
+        model = _resolve_codex_model(model_key=MODEL_KEY, model_map=model_map)
+        env['CODEX_MODEL'] = model
     env['EVM_BENCH_DETECT_MD'] = str(DETECT_MD_PATH)
 
     LOGS_DIR.mkdir(parents=True, exist_ok=True)

@@ -68,7 +68,11 @@ async def _require_no_active_job(*, session: AsyncSession, user_id: str) -> None
 
 
 def _require_allowed_model(model: str) -> None:
-    if model not in ALLOWED_MODELS:
+    allowed = model in ALLOWED_MODELS or (
+        settings.AZURE_OPENAI_DEPLOYMENT is not None
+        and model == f"azure-{settings.AZURE_OPENAI_DEPLOYMENT}"
+    )
+    if not allowed:
         raise HTTPException(status_code=401, detail='Model is not allowed')
 
 

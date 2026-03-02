@@ -7,6 +7,7 @@ const DEFAULT_FRONTEND_CONFIG: FrontendConfig = {
   // OSS-friendly default: if the backend config can't be fetched, don't gate usage on auth.
   auth_enabled: false,
   key_predefined: false,
+  azure_model: null,
 }
 let frontendConfigCache: { value: FrontendConfig; timestamp: number } | null =
   null
@@ -85,6 +86,9 @@ export function useAuth() {
       ? frontendConfigCache.value.key_predefined
       : DEFAULT_FRONTEND_CONFIG.key_predefined,
   )
+  const [azureModel, setAzureModel] = useState<string | null>(
+    frontendConfigCache?.value.azure_model ?? null,
+  )
 
   useEffect(() => {
     let isMounted = true
@@ -95,6 +99,7 @@ export function useAuth() {
         if (isMounted) {
           setIsAuthEnabled(config.auth_enabled)
           setKeyPredefined(config.key_predefined)
+          setAzureModel(config.azure_model ?? null)
           setIsConfigLoading(false)
         }
 
@@ -136,6 +141,7 @@ export function useAuth() {
     isConfigLoading,
     isAuthEnabled,
     keyPredefined,
+    azureModel,
     isAuthorized: !isAuthEnabled || Boolean(user),
   }
 }

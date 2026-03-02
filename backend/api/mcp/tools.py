@@ -114,8 +114,14 @@ async def tool_start_job(
     """Start a smart-contract audit job."""
     token = _mcp_token()
 
-    if model not in ALLOWED_MODELS:
+    allowed = model in ALLOWED_MODELS or (
+        settings.AZURE_OPENAI_DEPLOYMENT is not None
+        and model == f"azure-{settings.AZURE_OPENAI_DEPLOYMENT}"
+    )
+    if not allowed:
         msg = f'Model not allowed. Choose from: {", ".join(sorted(ALLOWED_MODELS))}'
+        if settings.AZURE_OPENAI_DEPLOYMENT:
+            msg += f' or azure-{settings.AZURE_OPENAI_DEPLOYMENT}'
         raise ValueError(msg)
 
     upload = _decode_upload(file_base64, file_name)

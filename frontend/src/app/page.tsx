@@ -4,7 +4,7 @@ import { ArrowUpRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { AppFooter } from "@/components/app-footer"
 import { AppHeader } from "@/components/app-header"
 import { DailyLimitIndicator } from "@/components/daily-limit-indicator"
@@ -48,6 +48,7 @@ export default function Page() {
     isLoading: isAuthLoading,
     isConfigLoading,
     keyPredefined,
+    azureModel,
   } = useAuth()
 
   const { data: dailyLimit, isLoading: isDailyLimitLoading, error: dailyLimitError } =
@@ -62,6 +63,10 @@ export default function Page() {
 
   const canSubmit =
     !!files && fileCount > 0 && !isSubmitting && !isAuthLoading && isAuthorized
+
+  useEffect(() => {
+    if (azureModel) setModel(azureModel)
+  }, [azureModel])
 
   const handleFilesSelected = useCallback(
     (selected: File[]) => {
@@ -247,12 +252,20 @@ export default function Page() {
                       <SelectValue placeholder="Select model" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="codex-gpt-5.2">
-                        codex-gpt-5.2
-                      </SelectItem>
-                      <SelectItem value="codex-gpt-5.1-codex-max">
-                        codex-gpt-5.1-codex-max
-                      </SelectItem>
+                      {azureModel ? (
+                        <SelectItem value={azureModel}>
+                          {azureModel}
+                        </SelectItem>
+                      ) : (
+                        <>
+                          <SelectItem value="codex-gpt-5.2">
+                            codex-gpt-5.2
+                          </SelectItem>
+                          <SelectItem value="codex-gpt-5.1-codex-max">
+                            codex-gpt-5.1-codex-max
+                          </SelectItem>
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
