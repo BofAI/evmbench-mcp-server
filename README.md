@@ -1,22 +1,22 @@
-# evmbench
+# evmBench-mcp-server
 
 [![Apache-2.0 License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-A benchmark and agent harness for finding and exploiting smart contract bugs. Upload contract source code, select a model, and receive a structured vulnerability report.
+MCP server and web interface for smart contract audits. Upload contract source code, select a model, and receive a structured vulnerability report. Based on [evmBench](https://github.com/openai/frontier-evals); adds MCP (Model Context Protocol) endpoints for agents and tools.
 
 ## Background
 
-This repository is maintained by **BankofAI**. We forked the [evmBench](https://github.com/openai/frontier-evals) project and extended it with additional capabilities:
+This project is maintained by **BankofAI** and is **based on** [evmBench](https://github.com/openai/frontier-evals). We extended the original codebase with:
 
 - **Original audit service** — Web UI and API for submitting contracts and running the detect-only Codex agent, unchanged in spirit.
 - **MCP integration** — New MCP (Model Context Protocol) endpoints so other agents or MCP-enabled tools can trigger audits and consume results programmatically.
 
-If you need to run smart-contract audits from an MCP client or another agent, this fork provides the necessary APIs and tool definitions.
+If you need to run smart-contract audits from an MCP client or another agent, this project provides the necessary APIs and tool definitions.
 
 ## Features
 
 - **Web UI** — Upload a zip of contract sources, choose a model, and view the vulnerability report with file navigation and annotations.
-- **REST API** — Job submission, status, and history (`/v1/jobs/start`, `/v1/jobs/{id}`, `/v1/jobs/history`).
+- **REST API** — Job submission, status, history, and daily limit (`/v1/jobs/start`, `/v1/jobs/{id}`, `/v1/jobs/history`, `/v1/jobs/daily-limit`).
 - **MCP API** — Tools callable via MCP for starting jobs and querying results (see [backend/README.md](backend/README.md) for MCP setup).
 - **Flexible backends** — Worker execution via Docker (default) or optional Kubernetes.
 - **OpenAI / Azure** — Support for direct API key, proxy-token mode, or Azure OpenAI (single deployment).
@@ -31,7 +31,8 @@ Frontend (Next.js)
     ├─ POST /v1/jobs/start ───► Backend API (FastAPI, port 1337)
     ├─ GET  /v1/jobs/{id}           ├─► PostgreSQL (job state)
     ├─ GET  /v1/jobs/history        ├─► Secrets Service (port 8081)
-    └─ MCP tools                    └─► RabbitMQ (job queue)
+    ├─ GET  /v1/jobs/daily-limit    └─► RabbitMQ (job queue)
+    └─ MCP tools
                                              │
                                         Instancer (consumer)
                                               │
@@ -130,18 +131,19 @@ See [backend/README.md](backend/README.md) for MCP, env vars, and deployment det
 │   ├── instancer/      RabbitMQ consumer; Docker/K8s worker launcher
 │   ├── secretsvc/      Bundle storage
 │   ├── resultsvc/      Result ingestion + DB
-│   ├── oai_proxy/      Optional OpenAI proxy
+│   ├── oai_proxy/      Optional OpenAI proxy (profile: proxy)
+│   ├── prunner/        Optional cleanup of stale workers (profile: cleanup)
 │   ├── worker_runner/  Detect prompt, model map, Codex runner script
 │   ├── docker/         Base, backend, and worker images
 │   └── compose.yml     Full stack
-└── deploy/             Optional deployment examples
+└── deploy/             Deployment scripts (e.g. GCE)
 ```
 
 ## License
 
-This repository is a fork of [evmBench](https://github.com/openai/frontier-evals). The codebase remains under the same terms as the upstream project: **Apache-2.0**. See [LICENSE](LICENSE).
+This codebase is **based on** [evmBench](https://github.com/openai/frontier-evals) and is used under the same terms: **Apache-2.0**. The [LICENSE](LICENSE) file in this repository applies to the code herein. Modifications and additions (including MCP integration) are by BankofAI.
 
 ## Acknowledgments
 
-- [evmBench / frontier-evals](https://github.com/openai/frontier-evals) — Original benchmark and harness.
+- [evmBench / frontier-evals](https://github.com/openai/frontier-evals) — Original benchmark and agent harness.
 - OtterSec team (es3n1n, jktrn, TrixterTheTux, sahuang) — Frontend and tooling support.

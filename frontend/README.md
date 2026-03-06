@@ -1,4 +1,4 @@
-# evmbench frontend
+# evmBench-mcp-server frontend
 
 ```
 bun install

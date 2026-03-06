@@ -1,6 +1,6 @@
 # Security
 
-`evmbench` executes an LLM-driven agent against uploaded, untrusted code in an isolated worker environment. Treat the worker and anything it touches (filesystem, logs, outputs) as adversarial.
+evmBench-mcp-server executes an LLM-driven agent against uploaded, untrusted code in an isolated worker environment. Treat the worker and anything it touches (filesystem, logs, outputs) as adversarial.
 
 This document describes the trust boundaries and the two supported approaches for handling OpenAI credentials.
 

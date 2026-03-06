@@ -1,4 +1,4 @@
-# evmbench backend
+# evmBench-mcp-server backend
 
 This directory contains the backend services and worker orchestration.
 
