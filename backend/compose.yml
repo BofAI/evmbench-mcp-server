@@ -98,6 +98,10 @@ services:
       OAI_PROXY_AES_KEY: ${OAI_PROXY_AES_KEY:-}
       # Upstream API base URL (default https://api.openai.com)
       OAI_PROXY_OPENAI_BASE_URL: ${OAI_PROXY_OPENAI_BASE_URL:-https://api.openai.com}
+      # Static key + Azure: when worker sends STATIC, proxy forwards to this base (e.g. Azure)
+      OAI_PROXY_STATIC_KEY: ${OAI_PROXY_STATIC_KEY:-}
+      OAI_PROXY_STATIC_BASE_URL: ${OAI_PROXY_STATIC_BASE_URL:-}
+      OAI_PROXY_STATIC_API_VERSION: ${OAI_PROXY_STATIC_API_VERSION:-}
     ports:
       - "8084:8084"
     networks:
